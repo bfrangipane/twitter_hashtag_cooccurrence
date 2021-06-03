@@ -6,6 +6,7 @@ import json
 from datetime import datetime
 import time 
 
+
 def num_to_prob(col):
     return col/col.sum()
 
@@ -22,7 +23,7 @@ def stop(hashtag_df, hashtags_searched, stopping_prob, iter_num, max_iters):
     return stop, prob
 
 
-def create_metadata(seed_hashtag, stopping_prob, max_iters):
+def create_metadata(seed_hashtag, stopping_prob=.2, max_iters=100):
     metadata = {}
     metadata['iters'] = {}
     metadata['init_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -46,6 +47,7 @@ def write_to_file(seed_hashtag, next_hashtag, hashtag_df, hashtags_searched, twe
     tweet_df.to_csv('output/tweet_df.csv')
     return metadata
 
+
 def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.2, max_iters=100, sleep_period=2):
     path= '{}/metadata.txt'.format(path_to_metadata)
     with open(path) as f:
@@ -54,8 +56,9 @@ def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob
     hashtag_df = pd.read_csv('../output/hashtag_df.csv')
     tweet_df = pd.read_csv('../output/tweet_df.csv')
     next_hashtag, hashtag_df, hashtags_searched, tweet_df = run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.2, max_iters=100, sleep_period=2)
-    seed_hashtag = find_next_hashtag(tweet_df, hashtags_searched) if seed_hashtag == '' else seed_hashtag
+    seed_hashtag = process_hashtags.find_next_hashtag(tweet_df, hashtags_searched) if seed_hashtag == '' else seed_hashtag
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df
+
 
 def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.2, max_iters=100, sleep_period=2):
     next_hashtag = seed_hashtag
