@@ -1,4 +1,4 @@
-
+import time
 import requests
 import os
 import json
@@ -47,24 +47,25 @@ def get_next_token(tweet_json):
     return tweet_json['meta']['next_token']
 
 
-def main(query, next_hashtag):
+def main(query, next_hashtag, sleep_period):
     bearer_token = auth()
-    i = 0
+    i = 1
     json_files = []
-    now_dt = datetime.now()
-    now = now_dt.strftime("%Y%m%d%H%M%S")
-    now_string = now_dt.strftime("%Y-%m-%d %H:%M:%S")
-    while i < 2:
-        next_token = None if i == 0 else get_next_token(json_response)
+    while i <= 2:
+        now_dt = datetime.now()
+        now = now_dt.strftime("%Y%m%d%H%M%S")
+        now_string = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+        next_token = None if i == 1 else get_next_token(json_response)
         url = create_url(query, next_token)
         headers = create_headers(bearer_token)
         json_response = connect_to_endpoint(url, headers)
-        print("{}: Searching for {}".format(now_string, next_hashtag))
+        print("{}: Search #{} for {}".format(now_string, i, next_hashtag))
         json_filename = next_hashtag + '_' + now + '_' + str(i)
-        json_file = 'data/{}.json'.format(json_filename)
+        json_file = '../data/{}.json'.format(json_filename)
         json_files.append(json_file)
         write_to_file(json_response, json_file)
         i += 1
+        time.sleep(sleep_period)
     return json_files
 
 

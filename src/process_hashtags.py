@@ -51,7 +51,6 @@ def update_hashtag_matrix(tweet_df):
             for j in range(min(i+1, n), n):
                 ht_i = hashtag_set[i]
                 ht_j = hashtag_set[j]
-                print(('{} {}').format(ht_i, ht_j))
                 if ht_i in hashtag_df.columns and ht_j in hashtag_df.columns:
                     hashtag_cnt = np.nan_to_num(hashtag_df.at[ht_i,ht_j])
                     hashtag_cnt += 1
@@ -67,7 +66,7 @@ def update_hashtag_matrix(tweet_df):
 def find_next_hashtag(tweet_df, hashtags_searched):
     hashtags_found = [ht for ht_set in tweet_df['hashtags'] for ht in ht_set if ht not in hashtags_searched]
     hashtags_counted = Counter(hashtags_found)
-    hashtags_sorted = sorted(hashtags_counted.items(), key=operator.itemgetter(1),reverse=True)
+    hashtags_sorted = sorted(hashtags_counted.items(), key=operator.itemgetter(1), reverse=True)
     next_hashtag = hashtags_sorted[0][0]
     return next_hashtag
     
@@ -80,7 +79,7 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag):
         tweet_df = pd.concat([tweet_df, new_tweet_df])
     tweet_df = remove_duplicates(tweet_df)
     hashtag_df = update_hashtag_matrix(tweet_df)
-    next_hashtag = find_next_hashtag(hashtag_df, hashtags_searched)
+    next_hashtag = find_next_hashtag(tweet_df, hashtags_searched)
     return next_hashtag, hashtag_df, tweet_df
 
 
