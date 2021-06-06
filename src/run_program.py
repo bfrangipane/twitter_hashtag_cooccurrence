@@ -8,9 +8,10 @@ import sys
 import os
 
 def init_project(project_path):
-    os.mkdir(project_path) 
-    os.mkdir(project_path + '/data') 
-    os.mkdir(project_path + '/output') 
+    if not os.path.isdir(project_path):
+        os.mkdir(project_path) 
+        os.mkdir(project_path + '/data') 
+        os.mkdir(project_path + '/output') 
 
 def stop_iters(marginal_df, stopping_prob, iter_num, max_iters):
     if iter_num > max_iters:
@@ -110,5 +111,5 @@ if __name__ == "__main__":
         project_path = '../runs/' + seed_hashtag + now
         begin_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters, project_path=project_path)
     elif method == 'continue':
-        project_path = sys.argv[5]
+        project_path = '../runs/' + sys.argv[5]
         continue_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters, project_path=project_path)
