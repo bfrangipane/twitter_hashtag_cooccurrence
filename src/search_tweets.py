@@ -51,7 +51,7 @@ def main(query, next_hashtag, sleep_period):
     bearer_token = auth()
     i = 1
     json_files = []
-    while i <= 2:
+    while i <= 3:
         now_dt = datetime.now()
         now = now_dt.strftime("%Y%m%d%H%M%S")
         now_string = now_dt.strftime("%Y-%m-%d %H:%M:%S")

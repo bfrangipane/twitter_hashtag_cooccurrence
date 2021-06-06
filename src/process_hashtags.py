@@ -70,16 +70,50 @@ def find_next_hashtag(tweet_df, hashtags_searched):
     next_hashtag = hashtags_sorted[0][0]
     return next_hashtag
     
+def find_next_hashtag_revised(marginal_df):
+    prob_df = marginal_df.drop(marginal_df.columns)
+    prob_df.drop(['None'], inplace = True)
+    next_hashtag = prob_df.max(axis = 1).sort_values(ascending = False).index[0]
+    return next_hashtag
 
-def main(json_files, hashtags_searched, tweet_df, next_hashtag):
+def marginal_probs(tweet_df, hashtags_searched):
+    marginal_df = pd.DataFrame()
+    for hashtag in hashtags_searched:
+        tweets_in_search_df = tweet_df[tweet_df['hashtag_searched']==hashtag]
+        num_tweets = len(tweets_in_search_df)
+        hashtag_list = [ht for ht_set in tweets_in_search_df['hashtags'] for ht in ht_set]
+        hashtag_counts = Counter(hashtag_list)
+        for ht, num in hashtag_counts.items():
+            marginal_df.at[ht, hashtag] = num/num_tweets
+        num_solo_hashtag_tweets = sum(tweets_in_search_df['num_hashtags']==1)
+        marginal_df.at['None', hashtag] = num_solo_hashtag_tweets/num_tweets
+    marginal_df.fillna(0, inplace=True)
+    return marginal_df
+
+def print_search_metrics(marginal_df, hashtag, top_n=10):
+    margins_sorted = marginal_df[marginal_df[hashtag] > 0].sort_values(by=hashtag, ascending=False)
+    i = 0
+    top_n = min(top_n, len(margins_sorted)) 
+    print ("Top {} co-occurrences for {}:".format(top_n, hashtag))
+    while i < top_n:
+        ht = margins_sorted.index[i]
+        prob = margins_sorted[hashtag][i]
+        if hashtag != ht:
+            print('  {} --> {}: {}%'.format(hashtag, ht, round(prob*100, 2)))
+        i += 1
+
+def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
     for json_file in json_files:
         new_tweet_data = load_tweets(json_file)
         new_tweets = new_tweet_data['data']
         new_tweet_df = process_tweets(new_tweets, next_hashtag)
         tweet_df = pd.concat([tweet_df, new_tweet_df])
     tweet_df = remove_duplicates(tweet_df)
+    new_marginal_df = marginal_probs(tweet_df, [next_hashtag])
+    print_search_metrics(new_marginal_df, next_hashtag)
     hashtag_df = update_hashtag_matrix(tweet_df)
-    next_hashtag = find_next_hashtag(tweet_df, hashtags_searched)
+    # next_hashtag = find_next_hashtag(tweet_df, hashtags_searched)
+    next_hashtag = find_next_hashtag_revised(new_marginal_df)
     return next_hashtag, hashtag_df, tweet_df
 
 
