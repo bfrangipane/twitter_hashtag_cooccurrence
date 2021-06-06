@@ -19,7 +19,6 @@ def stop(marginal_df, stopping_prob, iter_num, max_iters):
         stop_iters = (prob < stopping_prob)
     return stop_iters
 
-
 def create_metadata():
     metadata = {}
     metadata['init_time'] = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -27,7 +26,6 @@ def create_metadata():
     metadata['searches'] = {}
     metadata['hashtags_searched'] = []
     return metadata
-
 
 def add_searchdata_to_metadata(metadata, seed_hashtag, stopping_prob=.2, max_iters=100):
     searchdata = {}
@@ -40,7 +38,6 @@ def add_searchdata_to_metadata(metadata, seed_hashtag, stopping_prob=.2, max_ite
     metadata['searches'][metadata['num_searches']] = searchdata
     return metadata
 
-
 def add_iterdata_to_searchdata(next_hashtag, iter_num, searchdata):
     iterdata = {}
     iterdata['iter_num'] = iter_num
@@ -49,13 +46,11 @@ def add_iterdata_to_searchdata(next_hashtag, iter_num, searchdata):
     searchdata['iters'][iter_num] = iterdata
     return searchdata
 
-
 def update_metadata(metadata, next_hashtag, hashtags_searched, iter_num):
     searchdata = metadata['searches'][metadata['num_searches']]
     searchdata = add_iterdata_to_searchdata(next_hashtag, iter_num, searchdata)
     metadata['hashtags_searched'] = hashtags_searched
     return metadata
-
 
 def save_data(hashtag_df, tweet_df, metadata, marginal_df):
     with open('../output/metadata.json', 'w') as outfile:
@@ -63,7 +58,6 @@ def save_data(hashtag_df, tweet_df, metadata, marginal_df):
     hashtag_df.to_pickle('../output/hashtag_df.pkl')
     tweet_df.to_pickle('../output/tweet_df.pkl')
     marginal_df.to_pickle('../output/marginal_df.pkl')
-
 
 def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.1, max_iters=5, sleep_period=2):
     path = '{}/metadata.json'.format(path_to_metadata)
@@ -73,11 +67,9 @@ def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob
     hashtag_df = pd.read_pickle('../output/hashtag_df.pkl')
     tweet_df = pd.read_pickle('../output/tweet_df.pkl')
     marginal_df = pd.read_pickle('../output/marginal_df.pkl')
-    # seed_hashtag = process_hashtags.find_next_hashtag(tweet_df, hashtags_searched) if seed_hashtag == '' else seed_hashtag
-    seed_hashtag = process_hashtags.find_next_hashtag_revised(marginal_df) if seed_hashtag == '' else seed_hashtag
+    seed_hashtag = process_hashtags.find_next_hashtag(marginal_df) if seed_hashtag == '' else seed_hashtag
     next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = run(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
-
 
 def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
     seed_hashtag = seed_hashtag.upper()
@@ -93,7 +85,6 @@ def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=
         save_data(hashtag_df, tweet_df, metadata, marginal_df)
         iter_num += 1
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
-
 
 if __name__ == "__main__":
     method=sys.argv[1]

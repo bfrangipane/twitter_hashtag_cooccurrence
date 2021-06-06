@@ -11,7 +11,6 @@ def load_tweets(file):
         tweets = json.load(f)
     return tweets
 
-
 def flatten_tweet(tweet):
     tweet_flattened = tweet.copy() 
     del tweet_flattened['public_metrics']
@@ -19,14 +18,11 @@ def flatten_tweet(tweet):
     tweet_series = pd.Series(tweet_flattened)
     return tweet_series
 
-
 def extract_hash_tags(text):
     return set(hashtag.upper() for hashtag in re.findall(r'\B#\w*[a-zA-Z]+\w*', text))
 
-
 def remove_extras(text):
     return ' '.join([word for word in text.split() if not (word.startswith('@') or word.startswith('https://'))])
-
 
 def process_tweets(tweets, next_hashtag):
     tweet_df = pd.DataFrame({v:flatten_tweet(t) for t, v in zip(tweets, range(len(tweets)))}).T
@@ -36,12 +32,10 @@ def process_tweets(tweets, next_hashtag):
     tweet_df['hashtag_searched'] = next_hashtag
     return tweet_df
 
-
 def remove_duplicates(tweet_df):
     tweet_df_dedup = tweet_df.drop_duplicates(subset=['author_id'])
     tweet_df_dedup = tweet_df_dedup.drop_duplicates(subset=['processed_text'])
     return tweet_df_dedup
-
 
 def update_hashtag_matrix(tweet_df):
     hashtag_df=pd.DataFrame()
@@ -62,15 +56,7 @@ def update_hashtag_matrix(tweet_df):
     tweet_df['hashtags'].apply(hashtag_matrix_helper)
     return hashtag_df
     
-
-def find_next_hashtag(tweet_df, hashtags_searched):
-    hashtags_found = [ht for ht_set in tweet_df['hashtags'] for ht in ht_set if ht not in hashtags_searched]
-    hashtags_counted = Counter(hashtags_found)
-    hashtags_sorted = sorted(hashtags_counted.items(), key=operator.itemgetter(1), reverse=True)
-    next_hashtag = hashtags_sorted[0][0]
-    return next_hashtag
-    
-def find_next_hashtag_revised(marginal_df):
+def find_next_hashtag(marginal_df):
     prob_df = marginal_df.drop(marginal_df.columns)
     prob_df.drop(['None'], inplace = True)
     next_hashtag = prob_df.max(axis = 1).sort_values(ascending = False).index[0]
@@ -112,9 +98,8 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
     sub_marginal_df = marginal_probs(tweet_df, [next_hashtag])
     print_search_metrics(sub_marginal_df, next_hashtag)
     hashtag_df = update_hashtag_matrix(tweet_df)
-    # next_hashtag = find_next_hashtag(tweet_df, hashtags_searched)
     marginal_df = marginal_probs(tweet_df, hashtags_searched)
-    next_hashtag = find_next_hashtag_revised(marginal_df) # this needs to be run on the updated marginal_df, not the sub one
+    next_hashtag = find_next_hashtag(marginal_df)
     return next_hashtag, hashtag_df, tweet_df, marginal_df
 
 

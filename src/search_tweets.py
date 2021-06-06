@@ -8,7 +8,6 @@ from datetime import datetime
 def auth():
     return os.environ.get("TWITTER_BEARER_TOKEN")
 
-
 def create_url(query, next_token):
     # Tweet fields are adjustable.
     # Options include:
@@ -25,11 +24,9 @@ def create_url(query, next_token):
     )
     return url
 
-
 def create_headers(bearer_token):
     headers = {"Authorization": "Bearer {}".format(bearer_token)}
     return headers
-
 
 def connect_to_endpoint(url, headers, params=None):
     response = requests.request("GET", url, headers=headers, params=params)
@@ -37,15 +34,12 @@ def connect_to_endpoint(url, headers, params=None):
         raise Exception(response.status_code, response.text)
     return response.json()
 
-
 def write_to_file(data, filename):
     with open(filename, 'w') as outfile:
         json.dump(data, outfile, indent=2)
 
-
 def get_next_token(tweet_json):
     return tweet_json['meta']['next_token']
-
 
 def main(query, next_hashtag, sleep_period):
     bearer_token = auth()
