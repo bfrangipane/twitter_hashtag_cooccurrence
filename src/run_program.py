@@ -5,6 +5,12 @@ import pandas as pd
 import json
 from datetime import datetime
 import sys
+import os
+
+def init_project(project_path):
+    os.mkdir(project_path) 
+    os.mkdir(project_path + '/data') 
+    os.mkdir(project_path + '/output') 
 
 def stop_iters(marginal_df, stopping_prob, iter_num, max_iters):
     if iter_num > max_iters:
@@ -51,15 +57,16 @@ def update_metadata(metadata, next_hashtag, hashtags_searched, iter_num):
     metadata['hashtags_searched'] = hashtags_searched
     return metadata
 
-def save_data(hashtag_df, tweet_df, metadata, marginal_df):
-    with open('../output/metadata.json', 'w') as outfile:
+def save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path):
+    file_path = project_path + '/output/'
+    with open(file_path + 'metadata.json', 'w') as outfile:
         json.dump(metadata, outfile, indent=4)
-    hashtag_df.to_pickle('../output/hashtag_df.pkl')
-    tweet_df.to_pickle('../output/tweet_df.pkl')
-    marginal_df.to_pickle('../output/marginal_df.pkl')
+    hashtag_df.to_pickle(file_path + 'hashtag_df.pkl')
+    tweet_df.to_pickle(file_path + 'tweet_df.pkl')
+    marginal_df.to_pickle(file_path + 'marginal_df.pkl')
 
-def load_data(path_to_metadata):
-    path = '{}/metadata.json'.format(path_to_metadata)
+def load_data(project_path):
+    path = '{}/output/metadata.json'.format(project_path)
     with open(path) as f:
         metadata = json.load(f)
     hashtags_searched = metadata['hashtags_searched']
@@ -68,23 +75,24 @@ def load_data(path_to_metadata):
     marginal_df = pd.read_pickle('../output/marginal_df.pkl')
     return metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df
 
-def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.1, max_iters=5, sleep_period=2):
-    metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(path_to_metadata)
+def continue_search(seed_hashtag='', project_path='../output', stopping_prob=.1, max_iters=5, sleep_period=2):
+    metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(project_path)
     seed_hashtag = process_hashtags.find_next_hashtag(marginal_df) if seed_hashtag == '' else seed_hashtag
-    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df)
+    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
-def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
+def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame(), project_path='../output'):
+    init_project(project_path)
     next_hashtag = seed_hashtag
     iter_num = 1
     metadata = add_searchdata_to_metadata(metadata, seed_hashtag, stopping_prob, max_iters)
     while not stop_iters(marginal_df, stopping_prob, iter_num, max_iters):
         query = prepare_query.main(next_hashtag)
-        json_files = search_tweets.main(query, next_hashtag, sleep_period)
+        json_files = search_tweets.main(query, next_hashtag, sleep_period, project_path)
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
         next_hashtag, hashtag_df, tweet_df, marginal_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df)
-        save_data(hashtag_df, tweet_df, metadata, marginal_df)
+        save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path)
         if next_hashtag == '':
             break
         iter_num += 1
@@ -97,6 +105,10 @@ if __name__ == "__main__":
     max_iters=int(sys.argv[4])
 
     if method == 'begin':
-        begin_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
+        now_dt = datetime.now()
+        now = now_dt.strftime("%Y%m%d%H%M%S")
+        project_path = '../runs/' + seed_hashtag + now
+        begin_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters, project_path=project_path)
     elif method == 'continue':
-        continue_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
+        project_path = sys.argv[5]
+        continue_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters, project_path=project_path)

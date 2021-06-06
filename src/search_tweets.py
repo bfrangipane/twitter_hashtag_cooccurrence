@@ -40,7 +40,7 @@ def write_to_file(data, filename):
 def get_next_token(tweet_json):
     return tweet_json['meta']['next_token']
 
-def main(query, next_hashtag, sleep_period):
+def main(query, next_hashtag, sleep_period, project_path):
     bearer_token = auth()
     i = 1
     json_files = []
@@ -54,7 +54,7 @@ def main(query, next_hashtag, sleep_period):
         json_response = connect_to_endpoint(url, headers)
         print("{}: Search #{} for {}".format(now_string, i, next_hashtag))
         json_filename = next_hashtag + '_' + now + '_' + str(i)
-        json_file = '../data/{}.json'.format(json_filename)
+        json_file = project_path + '/data/{}.json'.format(json_filename)
         json_files.append(json_file)
         write_to_file(json_response, json_file)
         i += 1
