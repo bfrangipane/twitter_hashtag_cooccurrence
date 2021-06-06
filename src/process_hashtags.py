@@ -38,6 +38,8 @@ def remove_duplicates(tweet_df):
 
 def update_hashtag_matrix(tweet_df):
     hashtag_df=pd.DataFrame()
+    if len(tweet_df) == 0:
+        return hashtag_df
     def hashtag_matrix_helper(hashtag_set):
         n = len(hashtag_set)
         for i in range(n):
@@ -56,6 +58,8 @@ def update_hashtag_matrix(tweet_df):
     return hashtag_df
     
 def find_next_hashtag(marginal_df):
+    if len(marginal_df) == 0:
+        return ''
     prob_df = marginal_df.drop(marginal_df.columns)
     prob_df.drop(['None'], inplace = True)
     next_hashtag = prob_df.max(axis = 1).sort_values(ascending = False).index[0]
@@ -63,19 +67,28 @@ def find_next_hashtag(marginal_df):
 
 def marginal_probs(tweet_df, hashtags_searched):
     marginal_df = pd.DataFrame()
+    if len(tweet_df) == 0:
+        return marginal_df
+    if len(hashtags_searched) == 0:
+        return marginal_df
     for hashtag in hashtags_searched:
         tweets_in_search_df = tweet_df[tweet_df['hashtag_searched']==hashtag]
         num_tweets = len(tweets_in_search_df)
+        if num_tweets == 0:
+            continue
         hashtag_list = [ht for ht_set in tweets_in_search_df['hashtags'] for ht in ht_set]
         hashtag_counts = Counter(hashtag_list)
         for ht, num in hashtag_counts.items():
-            marginal_df.at[ht, hashtag] = num/num_tweets # need to handle case when num_tweets = 0
+            marginal_df.at[ht, hashtag] = num/num_tweets
         num_solo_hashtag_tweets = sum(tweets_in_search_df['num_hashtags']==1)
-        marginal_df.at['None', hashtag] = num_solo_hashtag_tweets/num_tweets # need to handle case when num_tweets = 0
+        marginal_df.at['None', hashtag] = num_solo_hashtag_tweets/num_tweets
     marginal_df.fillna(0, inplace=True)
     return marginal_df
 
 def print_search_metrics(marginal_df, hashtag, top_n=10):
+    if len(marginal_df) == 0:
+        print('Search metrics empty for hashtag: {}'.format(hashtag))
+        return
     margins_sorted = marginal_df[marginal_df[hashtag] > 0].sort_values(by=hashtag, ascending=False)
     i = 0
     top_n = min(top_n, len(margins_sorted)) 
@@ -90,6 +103,8 @@ def print_search_metrics(marginal_df, hashtag, top_n=10):
 def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
     for json_file in json_files:
         new_tweet_data = load_tweets(json_file)
+        if new_tweet_data['meta']['result_count'] == 0:
+            continue
         new_tweets = new_tweet_data['data']
         new_tweet_df = process_tweets(new_tweets, next_hashtag)
         tweet_df = pd.concat([tweet_df, new_tweet_df])
