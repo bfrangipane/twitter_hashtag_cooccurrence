@@ -6,7 +6,6 @@ import json
 from datetime import datetime
 import sys
 
-
 def stop(marginal_df, stopping_prob, iter_num, max_iters):
     if iter_num > max_iters:
         stop_iters = True
@@ -68,10 +67,10 @@ def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob
     tweet_df = pd.read_pickle('../output/tweet_df.pkl')
     marginal_df = pd.read_pickle('../output/marginal_df.pkl')
     seed_hashtag = process_hashtags.find_next_hashtag(marginal_df) if seed_hashtag == '' else seed_hashtag
-    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = run(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df)
+    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
-def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
+def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
     seed_hashtag = seed_hashtag.upper()
     next_hashtag = seed_hashtag
     iter_num = 1
@@ -93,7 +92,7 @@ if __name__ == "__main__":
     max_iters=int(sys.argv[4])
 
     if method == 'begin':
-        run(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
+        begin_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
     elif method == 'continue':
         continue_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
 

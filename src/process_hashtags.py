@@ -5,7 +5,6 @@ import numpy as np
 from collections import Counter
 import operator
 
-
 def load_tweets(file):
     with open(file) as f:
         tweets = json.load(f)

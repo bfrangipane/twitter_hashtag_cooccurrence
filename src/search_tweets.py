@@ -4,7 +4,6 @@ import os
 import json
 from datetime import datetime
 
-
 def auth():
     return os.environ.get("TWITTER_BEARER_TOKEN")
 
