@@ -69,9 +69,9 @@ def marginal_probs(tweet_df, hashtags_searched):
         hashtag_list = [ht for ht_set in tweets_in_search_df['hashtags'] for ht in ht_set]
         hashtag_counts = Counter(hashtag_list)
         for ht, num in hashtag_counts.items():
-            marginal_df.at[ht, hashtag] = num/num_tweets
+            marginal_df.at[ht, hashtag] = num/num_tweets # need to handle case when num_tweets = 0
         num_solo_hashtag_tweets = sum(tweets_in_search_df['num_hashtags']==1)
-        marginal_df.at['None', hashtag] = num_solo_hashtag_tweets/num_tweets
+        marginal_df.at['None', hashtag] = num_solo_hashtag_tweets/num_tweets # need to handle case when num_tweets = 0
     marginal_df.fillna(0, inplace=True)
     return marginal_df
 
