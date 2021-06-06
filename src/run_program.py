@@ -64,7 +64,7 @@ def save_data(hashtag_df, tweet_df, metadata):
     tweet_df.to_pickle('../output/tweet_df.pkl')
 
 
-def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.2, max_iters=100, sleep_period=2):
+def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.1, max_iters=5, sleep_period=2):
     path = '{}/metadata.json'.format(path_to_metadata)
     with open(path) as f:
         metadata = json.load(f)
@@ -78,7 +78,7 @@ def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
 
-def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.2, max_iters=100, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
+def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame()):
     seed_hashtag = seed_hashtag.upper()
     next_hashtag = seed_hashtag
     iter_num = 1
@@ -88,11 +88,10 @@ def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=
         json_files = search_tweets.main(query, next_hashtag, sleep_period)
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
-        next_hashtag, hashtag_df, tweet_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df)
-        save_data(hashtag_df, tweet_df, metadata)
+        next_hashtag, hashtag_df, tweet_df, marginal_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df)
+        save_data(hashtag_df, tweet_df, metadata)  # add marginal_df
         iter_num += 1
-    marginal_df = process_hashtags.marginal_probs(tweet_df, hashtags_searched)
-    marginal_df.to_pickle('../output/marginal_df.pkl')
+    marginal_df.to_pickle('../output/marginal_df.pkl') # add to save_data
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
 
@@ -126,3 +125,4 @@ if __name__ == "__main__":
 # need some init.py to create directories
 # open search tweets to 100 tweets per search
 # add total tweets per hashtag to metadata?
+# how to prioritize hashtags closer to seed?  

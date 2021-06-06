@@ -109,12 +109,13 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
         new_tweet_df = process_tweets(new_tweets, next_hashtag)
         tweet_df = pd.concat([tweet_df, new_tweet_df])
     tweet_df = remove_duplicates(tweet_df)
-    new_marginal_df = marginal_probs(tweet_df, [next_hashtag])
-    print_search_metrics(new_marginal_df, next_hashtag)
+    sub_marginal_df = marginal_probs(tweet_df, [next_hashtag])
+    print_search_metrics(sub_marginal_df, next_hashtag)
     hashtag_df = update_hashtag_matrix(tweet_df)
     # next_hashtag = find_next_hashtag(tweet_df, hashtags_searched)
-    next_hashtag = find_next_hashtag_revised(new_marginal_df)
-    return next_hashtag, hashtag_df, tweet_df
+    marginal_df = marginal_probs(tweet_df, hashtags_searched)
+    next_hashtag = find_next_hashtag_revised(marginal_df) # this needs to be run on the updated marginal_df, not the sub one
+    return next_hashtag, hashtag_df, tweet_df, marginal_df
 
 
 if __name__ == "__main__":
