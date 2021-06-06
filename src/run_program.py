@@ -57,11 +57,12 @@ def update_metadata(metadata, next_hashtag, hashtags_searched, iter_num):
     return metadata
 
 
-def save_data(hashtag_df, tweet_df, metadata):
+def save_data(hashtag_df, tweet_df, metadata, marginal_df):
     with open('../output/metadata.json', 'w') as outfile:
         json.dump(metadata, outfile, indent=4)
     hashtag_df.to_pickle('../output/hashtag_df.pkl')
     tweet_df.to_pickle('../output/tweet_df.pkl')
+    marginal_df.to_pickle('../output/marginal_df.pkl')
 
 
 def continue_search(seed_hashtag='', path_to_metadata='../output', stopping_prob=.1, max_iters=5, sleep_period=2):
@@ -89,35 +90,21 @@ def run(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
         next_hashtag, hashtag_df, tweet_df, marginal_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df)
-        save_data(hashtag_df, tweet_df, metadata)  # add marginal_df
+        save_data(hashtag_df, tweet_df, metadata, marginal_df)
         iter_num += 1
-    marginal_df.to_pickle('../output/marginal_df.pkl') # add to save_data
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
 
 if __name__ == "__main__":
-    seed_hashtag=sys.argv[1]
-    run(seed_hashtag)
+    method=sys.argv[1]
+    seed_hashtag=sys.argv[2]
+    stopping_prob=float(sys.argv[3])
+    max_iters=int(sys.argv[4])
 
-    # continue_search(stopping_prob = .1, max_iters = 3)
-    # seed_hashtag='#BLM'
-    # path_to_metadata='../output'
-    # stopping_prob=0
-    # max_iters=2
-    # sleep_period=2
-    
-
-    # path = '../output/metadata.json'
-    # with open(path) as f:
-    #     metadata = json.load(f)
-    # metadata['hashtags_searched']=['#BDS']
-    # metadata['num_searches']=1
-    # del  metadata['searches']['2']
-
-    # with open('../output/metadata.json', 'w') as outfile:
-    #     json.dump(metadata, outfile, indent=4)
-
-    # next_hashtag, hashtag_df, hashtags_searched, tweet_df = continue_search(seed_hashtag, path_to_metadata, stopping_prob, max_iters, sleep_period)
+    if method == 'begin':
+        run(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
+    elif method == 'continue':
+        continue_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters)
 
 
 # to do:
@@ -125,4 +112,4 @@ if __name__ == "__main__":
 # need some init.py to create directories
 # open search tweets to 100 tweets per search
 # add total tweets per hashtag to metadata?
-# how to prioritize hashtags closer to seed?  
+# how to prioritize hashtags closer to seed? Instead of prioritizing highest probabilities, search all the ones that are above the threshold of the previous searches. 
