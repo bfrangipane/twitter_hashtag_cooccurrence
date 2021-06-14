@@ -92,7 +92,7 @@ def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], 
         json_files = search_tweets.main(query, next_hashtag, sleep_period, project_path)
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
-        next_hashtag, hashtag_df, tweet_df, marginal_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df)
+        next_hashtag, hashtag_df, tweet_df, marginal_df = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob)
         save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path)
         if next_hashtag == '':
             break

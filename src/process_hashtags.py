@@ -57,12 +57,17 @@ def update_hashtag_matrix(tweet_df):
     tweet_df['hashtags'].apply(hashtag_matrix_helper)
     return hashtag_df
     
-def find_next_hashtag(marginal_df):
+def find_next_hashtag(marginal_df, stopping_prob):
     if len(marginal_df) == 0:
         return ''
     prob_df = marginal_df.drop(marginal_df.columns)
     prob_df.drop(['None'], inplace = True)
-    next_hashtag = prob_df.max(axis = 1).sort_values(ascending = False).index[0]
+    m, n = prob_df.shape
+    offset_df = pd.DataFrame(np.reshape(list(range(n-1,-1,-1))*m, [m, n]))
+    offset_df.columns = prob_df.columns
+    offset_df.index = prob_df.index
+    rank_df = offset_df + prob_df[prob_df > stopping_prob]
+    next_hashtag = rank_df.max(axis = 1).sort_values(ascending = False).index[0]
     return next_hashtag
 
 def marginal_probs(tweet_df, hashtags_searched):
@@ -100,7 +105,7 @@ def print_search_metrics(marginal_df, hashtag, top_n=10):
             print('  {} --> {}: {}%'.format(hashtag, ht, round(prob*100, 2)))
         i += 1
 
-def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
+def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob):
     for json_file in json_files:
         new_tweet_data = load_tweets(json_file)
         if new_tweet_data['meta']['result_count'] == 0:
@@ -113,9 +118,13 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df):
     print_search_metrics(sub_marginal_df, next_hashtag)
     hashtag_df = update_hashtag_matrix(tweet_df)
     marginal_df = marginal_probs(tweet_df, hashtags_searched)
-    next_hashtag = find_next_hashtag(marginal_df)
+    next_hashtag = find_next_hashtag(marginal_df, stopping_prob)
     return next_hashtag, hashtag_df, tweet_df, marginal_df
 
 
 if __name__ == "__main__":
     main()
+
+# m, n = prob_df.shape
+# a = pd.DataFrame(np.reshape(list(range(n-1,-1,-1))*m, [m, n]))
+# 
