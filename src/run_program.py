@@ -78,7 +78,10 @@ def load_data(project_path):
 
 def continue_search(seed_hashtag='', project_path='../output', stopping_prob=.1, max_iters=5, sleep_period=2, num_searches=3):
     metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(project_path)
-    seed_hashtag, parent_hashtag, hashtag_prob = process_hashtags.find_next_hashtag(marginal_df, stopping_prob, hashtags_searched) if seed_hashtag == 'AUTO' else seed_hashtag, 'seed', 1
+    if seed_hashtag == 'AUTO':
+        seed_hashtag, parent_hashtag, hashtag_prob = process_hashtags.find_next_hashtag(marginal_df, stopping_prob, hashtags_searched) 
+    else:
+        next_hashtag, parent_hashtag, hashtag_prob = seed_hashtag, 'seed', 1
     next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_searches, parent_hashtag, hashtag_prob)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 

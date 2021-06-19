@@ -66,7 +66,7 @@ def find_next_hashtag(marginal_df, stopping_prob, hashtags_searched):
     offset_df = pd.DataFrame(np.reshape(list(range(n-1,-1,-1))*m, [m, n]))
     offset_df.columns = prob_df.columns
     offset_df.index = prob_df.index
-    rank_df = offset_df + prob_df[prob_df > stopping_prob]
+    rank_df = offset_df + prob_df[prob_df >= stopping_prob]
     next_hashtag = rank_df.max(axis = 1).sort_values(ascending = False).index[0]
     parent_hashtag = rank_df.loc[next_hashtag].sort_values(ascending=False).index[0]
     hashtag_prob = prob_df.at[next_hashtag, parent_hashtag]
