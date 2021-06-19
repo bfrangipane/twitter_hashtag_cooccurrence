@@ -57,10 +57,10 @@ def update_hashtag_matrix(tweet_df):
     tweet_df['hashtags'].apply(hashtag_matrix_helper)
     return hashtag_df
     
-def find_next_hashtag(marginal_df, stopping_prob):
+def find_next_hashtag(marginal_df, stopping_prob, hashtags_searched):
     if len(marginal_df) == 0:
-        return ''
-    prob_df = marginal_df.drop(marginal_df.columns)
+        return '', '', None # need to add more return values 
+    prob_df = marginal_df.drop(hashtags_searched, errors='ignore')
     prob_df.drop(['None'], inplace = True)
     m, n = prob_df.shape
     offset_df = pd.DataFrame(np.reshape(list(range(n-1,-1,-1))*m, [m, n]))
@@ -121,7 +121,7 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, sto
     print_search_metrics(sub_marginal_df, next_hashtag, parent_hashtag, hashtag_prob)
     hashtag_df = update_hashtag_matrix(tweet_df)
     marginal_df = marginal_probs(tweet_df, hashtags_searched)
-    next_hashtag, parent_hashtag, hashtag_prob = find_next_hashtag(marginal_df, stopping_prob)
+    next_hashtag, parent_hashtag, hashtag_prob = find_next_hashtag(marginal_df, stopping_prob, hashtags_searched)
     return next_hashtag, hashtag_df, tweet_df, marginal_df, parent_hashtag, hashtag_prob
 
 
