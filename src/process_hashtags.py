@@ -124,7 +124,3 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, sto
 
 if __name__ == "__main__":
     main()
-
-# m, n = prob_df.shape
-# a = pd.DataFrame(np.reshape(list(range(n-1,-1,-1))*m, [m, n]))
-# 

@@ -67,18 +67,18 @@ def save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path):
     marginal_df.to_pickle(file_path + 'marginal_df.pkl')
 
 def load_data(project_path):
-    path = '{}/output/metadata.json'.format(project_path)
-    with open(path) as f:
+    path = '{}/output'.format(project_path)
+    with open(path + '/metadata.json') as f:
         metadata = json.load(f)
     hashtags_searched = metadata['hashtags_searched']
-    hashtag_df = pd.read_pickle('../output/hashtag_df.pkl')
-    tweet_df = pd.read_pickle('../output/tweet_df.pkl')
-    marginal_df = pd.read_pickle('../output/marginal_df.pkl')
+    hashtag_df = pd.read_pickle(path + '/hashtag_df.pkl')
+    tweet_df = pd.read_pickle(path + '/tweet_df.pkl')
+    marginal_df = pd.read_pickle(path + '/marginal_df.pkl')
     return metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df
 
 def continue_search(seed_hashtag='', project_path='../output', stopping_prob=.1, max_iters=5, sleep_period=2, num_searches=3):
     metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(project_path)
-    seed_hashtag = process_hashtags.find_next_hashtag(marginal_df) if seed_hashtag == '' else seed_hashtag
+    seed_hashtag = process_hashtags.find_next_hashtag(marginal_df, stopping_prob) if seed_hashtag == 'AUTO' else seed_hashtag
     next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_searches)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
@@ -109,7 +109,9 @@ if __name__ == "__main__":
     if method == 'begin':
         now_dt = datetime.now()
         now = now_dt.strftime("%Y%m%d%H%M%S")
-        project_path = '../runs/' + seed_hashtag + now
+        project = seed_hashtag + now
+        project_path = '../runs/' + project
+        print('Project: ' + project)
         begin_search(seed_hashtag=seed_hashtag, stopping_prob=stopping_prob, max_iters=max_iters, project_path=project_path, num_searches=num_searches)
     elif method == 'continue':
         project_path = '../runs/' + sys.argv[6]
