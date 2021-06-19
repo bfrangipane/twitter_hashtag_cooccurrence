@@ -38,17 +38,23 @@ def write_to_file(data, filename):
         json.dump(data, outfile, indent=2)
 
 def get_next_token(tweet_json):
-    return tweet_json['meta']['next_token']
+    if 'next_token' in tweet_json['meta'].keys():
+        next_token = tweet_json['meta']['next_token']
+    else:
+        next_token = 'No more tokens' 
+    return next_token
 
-def main(query, next_hashtag, sleep_period, project_path):
+def main(query, next_hashtag, sleep_period, project_path, num_searches):
     bearer_token = auth()
     i = 1
     json_files = []
-    while i <= 1:
+    while i <= num_searches:
         now_dt = datetime.now()
         now = now_dt.strftime("%Y%m%d%H%M%S")
         now_string = now_dt.strftime("%Y-%m-%d %H:%M:%S")
         next_token = None if i == 1 else get_next_token(json_response)
+        if next_token == 'No more tokens':
+            break
         url = create_url(query, next_token)
         headers = create_headers(bearer_token)
         json_response = connect_to_endpoint(url, headers)
