@@ -78,11 +78,11 @@ def load_data(project_path):
 
 def continue_search(seed_hashtag='', project_path='../output', stopping_prob=.1, max_iters=5, sleep_period=2, num_searches=3):
     metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(project_path)
-    seed_hashtag, parent_hashtag = process_hashtags.find_next_hashtag(marginal_df, stopping_prob) if seed_hashtag == 'AUTO' else seed_hashtag
-    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_searches, parent_hashtag)
+    seed_hashtag, parent_hashtag, hashtag_prob = process_hashtags.find_next_hashtag(marginal_df, stopping_prob) if seed_hashtag == 'AUTO' else seed_hashtag
+    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_searches, parent_hashtag, hashtag_prob)
     return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
 
-def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame(), project_path='../output', num_searches=3, parent_hashtag='seed'):
+def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame(), project_path='../output', num_searches=3, parent_hashtag='seed', hashtag_prob=1):
     init_project(project_path)
     next_hashtag = seed_hashtag
     iter_num = 1
@@ -92,7 +92,7 @@ def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], 
         json_files = search_tweets.main(query, next_hashtag, sleep_period, project_path, num_searches)
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
-        next_hashtag, hashtag_df, tweet_df, marginal_df, parent_hashtag = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob, parent_hashtag)
+        next_hashtag, hashtag_df, tweet_df, marginal_df, parent_hashtag, hashtag_prob = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob, parent_hashtag, hashtag_prob)
         save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path)
         if next_hashtag == '':
             break
