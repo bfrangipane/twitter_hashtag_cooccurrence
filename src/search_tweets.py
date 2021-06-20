@@ -7,7 +7,7 @@ from datetime import datetime
 def auth():
     return os.environ.get("TWITTER_BEARER_TOKEN")
 
-def create_url(query, next_token):
+def create_url(query, next_token, num_tweets):
     # Tweet fields are adjustable.
     # Options include:
     # attachments, author_id, context_annotations,
@@ -17,7 +17,7 @@ def create_url(query, next_token):
     # source, text, and withheld
     tweet_fields = "tweet.fields=id,text,author_id,created_at,public_metrics,lang"
     pagination_field = "&next_token={}".format(next_token) if next_token!=None else ""
-    result_field = "max_results=10"
+    result_field = "max_results={}".format(num_tweets)
     url = "https://api.twitter.com/2/tweets/search/recent?query={}&{}{}&{}".format(
         query, tweet_fields, pagination_field, result_field
     )
@@ -44,7 +44,7 @@ def get_next_token(tweet_json):
         next_token = 'No more tokens' 
     return next_token
 
-def main(query, next_hashtag, sleep_period, project_path, num_searches):
+def main(query, next_hashtag, sleep_period, project_path, num_tweets, num_searches):
     bearer_token = auth()
     i = 1
     json_files = []
@@ -55,7 +55,7 @@ def main(query, next_hashtag, sleep_period, project_path, num_searches):
         next_token = None if i == 1 else get_next_token(json_response)
         if next_token == 'No more tokens':
             break
-        url = create_url(query, next_token)
+        url = create_url(query, next_token, num_tweets)
         headers = create_headers(bearer_token)
         json_response = connect_to_endpoint(url, headers)
         print("{}: Search #{} for {}".format(now_string, i, next_hashtag))
