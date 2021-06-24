@@ -3,7 +3,6 @@ import pandas as pd
 import re
 import numpy as np
 from collections import Counter
-import operator
 
 def load_tweets(file):
     with open(file) as f:
@@ -35,27 +34,6 @@ def remove_duplicates(tweet_df):
     tweet_df_dedup = tweet_df.drop_duplicates(subset=['author_id'])
     tweet_df_dedup = tweet_df_dedup.drop_duplicates(subset=['processed_text'])
     return tweet_df_dedup
-
-def update_hashtag_matrix(tweet_df):
-    hashtag_df=pd.DataFrame()
-    if len(tweet_df) == 0:
-        return hashtag_df
-    def hashtag_matrix_helper(hashtag_set):
-        n = len(hashtag_set)
-        for i in range(n):
-            for j in range(min(i+1, n), n):
-                ht_i = hashtag_set[i]
-                ht_j = hashtag_set[j]
-                if ht_i in hashtag_df.columns and ht_j in hashtag_df.columns:
-                    hashtag_cnt = np.nan_to_num(hashtag_df.at[ht_i,ht_j])
-                    hashtag_cnt += 1
-                    hashtag_df.at[ht_i,ht_j] = hashtag_cnt
-                    hashtag_df.at[ht_j,ht_i] = hashtag_cnt
-                else:
-                    hashtag_df.at[ht_i,ht_j] = 1
-                    hashtag_df.at[ht_j,ht_i] = 1
-    tweet_df['hashtags'].apply(hashtag_matrix_helper)
-    return hashtag_df
     
 def find_next_hashtag(marginal_df, stopping_prob, hashtags_searched):
     if len(marginal_df) == 0:
@@ -119,10 +97,9 @@ def main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, sto
     tweet_df = remove_duplicates(tweet_df)
     sub_marginal_df = marginal_probs(tweet_df, [next_hashtag])
     print_search_metrics(sub_marginal_df, next_hashtag, parent_hashtag, hashtag_prob)
-    hashtag_df = update_hashtag_matrix(tweet_df)
     marginal_df = marginal_probs(tweet_df, hashtags_searched)
     next_hashtag, parent_hashtag, hashtag_prob = find_next_hashtag(marginal_df, stopping_prob, hashtags_searched)
-    return next_hashtag, hashtag_df, tweet_df, marginal_df, parent_hashtag, hashtag_prob
+    return next_hashtag, tweet_df, marginal_df, parent_hashtag, hashtag_prob
 
 
 if __name__ == "__main__":

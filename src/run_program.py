@@ -58,11 +58,10 @@ def update_metadata(metadata, next_hashtag, hashtags_searched, iter_num):
     metadata['hashtags_searched'] = hashtags_searched
     return metadata
 
-def save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path):
+def save_data(tweet_df, metadata, marginal_df, project_path):
     file_path = project_path + '/output/'
     with open(file_path + 'metadata.json', 'w') as outfile:
         json.dump(metadata, outfile, indent=4)
-    hashtag_df.to_pickle(file_path + 'hashtag_df.pkl')
     tweet_df.to_pickle(file_path + 'tweet_df.pkl')
     marginal_df.to_pickle(file_path + 'marginal_df.pkl')
 
@@ -71,21 +70,20 @@ def load_data(project_path):
     with open(path + '/metadata.json') as f:
         metadata = json.load(f)
     hashtags_searched = metadata['hashtags_searched']
-    hashtag_df = pd.read_pickle(path + '/hashtag_df.pkl')
     tweet_df = pd.read_pickle(path + '/tweet_df.pkl')
     marginal_df = pd.read_pickle(path + '/marginal_df.pkl')
-    return metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df
+    return metadata, hashtags_searched, tweet_df, marginal_df
 
 def continue_search(seed_hashtag='', project_path='../output', stopping_prob=.1, max_iters=5, sleep_period=2, num_tweets=10, num_searches=3):
-    metadata, hashtags_searched, hashtag_df, tweet_df, marginal_df = load_data(project_path)
+    metadata, hashtags_searched, tweet_df, marginal_df = load_data(project_path)
     if seed_hashtag == 'AUTO':
         seed_hashtag, parent_hashtag, hashtag_prob = process_hashtags.find_next_hashtag(marginal_df, stopping_prob, hashtags_searched) 
     else:
         next_hashtag, parent_hashtag, hashtag_prob = seed_hashtag, 'seed', 1
-    next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtag_df, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_tweets, num_searches, parent_hashtag, hashtag_prob)
-    return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
+    next_hashtag, hashtags_searched, tweet_df, marginal_df = begin_search(seed_hashtag, hashtags_searched, tweet_df, stopping_prob, max_iters, sleep_period, metadata, marginal_df, project_path, num_tweets, num_searches, parent_hashtag, hashtag_prob)
+    return next_hashtag, hashtags_searched, tweet_df, marginal_df
 
-def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame(), project_path='../output', num_tweets=10, num_searches=3, parent_hashtag='seed', hashtag_prob=1):
+def begin_search(seed_hashtag, hashtags_searched=[], tweet_df=pd.DataFrame(), stopping_prob=.1, max_iters=5, sleep_period=2, metadata=create_metadata(), marginal_df=pd.DataFrame(), project_path='../output', num_tweets=10, num_searches=3, parent_hashtag='seed', hashtag_prob=1):
     init_project(project_path)
     next_hashtag = seed_hashtag
     iter_num = 1
@@ -95,12 +93,12 @@ def begin_search(seed_hashtag, hashtag_df=pd.DataFrame(), hashtags_searched=[], 
         json_files = search_tweets.main(query, next_hashtag, sleep_period, project_path, num_tweets, num_searches)
         hashtags_searched.append(next_hashtag)
         metadata = update_metadata(metadata, next_hashtag, hashtags_searched, iter_num)
-        next_hashtag, hashtag_df, tweet_df, marginal_df, parent_hashtag, hashtag_prob = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob, parent_hashtag, hashtag_prob)
-        save_data(hashtag_df, tweet_df, metadata, marginal_df, project_path)
+        next_hashtag, tweet_df, marginal_df, parent_hashtag, hashtag_prob = process_hashtags.main(json_files, hashtags_searched, tweet_df, next_hashtag, marginal_df, stopping_prob, parent_hashtag, hashtag_prob)
+        save_data(tweet_df, metadata, marginal_df, project_path)
         if next_hashtag == '':
             break
         iter_num += 1
-    return next_hashtag, hashtag_df, hashtags_searched, tweet_df, marginal_df
+    return next_hashtag, hashtags_searched, tweet_df, marginal_df
 
 if __name__ == "__main__":
     method=sys.argv[1]
